@@ -1,15 +1,25 @@
 <?php
 
-namespace App\Http\Controllers;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use Illuminate\Support\Facades\DB;
-
-class PortofolioController extends Controller
+return new class extends Migration
 {
-    public function index()
+    public function up(): void
     {
-        $portofolios = DB::table('Portofolio_2555301154')->get();
-
-        return view('portofolio.index', compact('portofolios'));
+        Schema::create('Portofolio_2555301154', function (Blueprint $table): void {
+            $table->id();
+            $table->string('judul');
+            $table->text('deskripsi');
+            $table->string('teknologi');
+            $table->string('gambar')->nullable();
+            $table->timestamps();
+        });
     }
-}
+
+    public function down(): void
+    {
+        Schema::dropIfExists('Portofolio_2555301154');
+    }
+};
