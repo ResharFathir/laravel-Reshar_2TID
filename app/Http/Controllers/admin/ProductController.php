@@ -23,7 +23,7 @@ class ProductController extends Controller
 
     private function formData(Product $product): array
     {
-        return ['product' => $product->load('variants'), 'brands' => Brand::orderBy('name')->get(), 'categories' => Category::orderBy('name')->get()];
+        return ['product' => $product->load(['variants', 'brand']), 'categories' => Category::orderBy('name')->get()];
     }
 
     public function index(Request $request)
@@ -31,8 +31,18 @@ class ProductController extends Controller
         $this->authorizeManager();
         $products = Product::with(['brand', 'category', 'variants'])
             ->when($request->filled('q'), fn ($query) => $query->where('name', 'like', '%'.$request->string('q').'%'))
-            ->latest()->paginate(12)->withQueryString();
-        return view('bumalo.products.index', compact('products'));
+            ->when($request->filled('kategori'), fn ($query) => $query->where('category_id', $request->integer('kategori')))
+            ->when($request->filled('brand'), fn ($query) => $query->where('brand_id', $request->integer('brand')))
+            ->when($request->input('status') === 'aktif', fn ($query) => $query->where('is_active', true))
+            ->when($request->input('status') === 'draft', fn ($query) => $query->where('is_active', false))
+            ->when($request->input('stok') === 'tersedia', fn ($query) => $query->whereHas('variants', fn ($variant) => $variant->where('stock', '>', 0)))
+            ->when($request->input('stok') === 'habis', fn ($query) => $query->whereDoesntHave('variants', fn ($variant) => $variant->where('stock', '>', 0)))
+            ->when($request->input('urut') === 'harga_asc', fn ($query) => $query->orderBy('price'))
+            ->when($request->input('urut') === 'harga_desc', fn ($query) => $query->orderByDesc('price'))
+            ->when($request->input('urut') === 'nama', fn ($query) => $query->orderBy('name'))
+            ->when(!in_array($request->input('urut'), ['harga_asc', 'harga_desc', 'nama'], true), fn ($query) => $query->latest())
+            ->paginate(12)->withQueryString();
+        return view('bumalo.products.index', ['products' => $products, 'categories' => Category::orderBy('name')->get(), 'brands' => Brand::whereHas('products')->orderBy('name')->get()]);
     }
 
     public function create()
@@ -46,10 +56,12 @@ class ProductController extends Controller
         $this->authorizeManager();
         $data = $this->validateProduct($request);
         $sizes = $data['sizes'];
-        unset($data['sizes']);
+        $brandName = trim($data['brand_name']);
+        unset($data['sizes'], $data['brand_name']);
         $data['slug'] = $this->uniqueSlug($data['name']);
         $data['image'] = $request->file('image')?->store('products', 'public');
-        $product = DB::transaction(function () use ($data, $sizes) {
+        $product = DB::transaction(function () use ($data, $sizes, $brandName) {
+            $data['brand_id'] = Brand::firstOrCreate(['name' => $brandName])->id;
             $product = Product::create($data);
             foreach ($sizes as $variant) {
                 $product->variants()->create([
@@ -73,7 +85,8 @@ class ProductController extends Controller
         $this->authorizeManager();
         $data = $this->validateProduct($request, $product);
         $sizes = $data['sizes'];
-        unset($data['sizes']);
+        $brandName = trim($data['brand_name']);
+        unset($data['sizes'], $data['brand_name']);
         if ($request->boolean('remove_image') && $product->image) Storage::disk('public')->delete($product->image);
         if ($request->hasFile('image')) {
             if ($product->image) Storage::disk('public')->delete($product->image);
@@ -82,7 +95,8 @@ class ProductController extends Controller
             $data['image'] = null;
         }
 
-        DB::transaction(function () use ($product, $data, $sizes) {
+        DB::transaction(function () use ($product, $data, $sizes, $brandName) {
+            $data['brand_id'] = Brand::firstOrCreate(['name' => $brandName])->id;
             $product->update($data);
             $keptSizes = [];
             foreach ($sizes as $variantData) {
@@ -115,7 +129,7 @@ class ProductController extends Controller
     private function validateProduct(Request $request, ?Product $product = null): array
     {
         $data = $request->validate([
-            'name' => 'required|string|max:180', 'brand_id' => 'required|exists:brands,id',
+            'name' => 'required|string|max:180', 'brand_name' => 'required|string|max:120',
             'category_id' => 'required|exists:categories,id', 'price' => 'required|integer|min:1|max:100000000',
             'description' => 'nullable|string|max:5000', 'is_active' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',

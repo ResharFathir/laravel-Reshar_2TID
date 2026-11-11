@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\{Brand, Category, Order, OrderItem, Payment, Product, ProductVariant, Shipment, StockMovement, User};
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -16,8 +17,18 @@ class BumaloController extends Controller
         $products = Product::with(['brand', 'category', 'variants'])->where('is_active', true)
             ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->string('q').'%'))
             ->when($request->filled('kategori'), fn ($q) => $q->whereHas('category', fn ($c) => $c->where('name', $request->kategori)))
-            ->latest()->get();
-        return view('bumalo.home', ['products' => $products, 'categories' => Category::orderBy('name')->get(), 'cartCount' => array_sum(session('cart', []))]);
+            ->when($request->filled('brand'), fn ($q) => $q->where('brand_id', $request->integer('brand')))
+            ->when($request->boolean('ready_stock'), fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('stock', '>', 0)))
+            ->when($request->filled('price'), function ($q) use ($request) {
+                match ($request->input('price')) {
+                    'low' => $q->orderBy('price'),
+                    'high' => $q->orderByDesc('price'),
+                    'name' => $q->orderBy('name'),
+                    default => $q->latest(),
+                };
+            }, fn ($q) => $q->latest())
+            ->get();
+        return view('bumalo.home', ['products' => $products, 'categories' => Category::orderBy('name')->get(), 'brands' => Brand::whereHas('products', fn ($query) => $query->where('is_active', true))->orderBy('name')->get(), 'cartCount' => array_sum(session('cart', []))]);
     }
 
     public function product(string $slug)
@@ -162,21 +173,68 @@ class BumaloController extends Controller
         $orders = Order::with(['items', 'payment', 'shipment'])->latest()->limit(40)->get();
         $products = Product::with(['brand', 'variants'])->orderBy('name')->get();
         $revenueStatuses = ['processing', 'shipped', 'completed'];
-        $salesByDay = Order::whereIn('status', $revenueStatuses)
-            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
-            ->selectRaw('DATE(created_at) as day, SUM(total) as total')->groupBy('day')->pluck('total', 'day');
-        $chart = collect(range(6, 0))->map(function (int $days) use ($salesByDay) {
-            $day = now()->subDays($days);
-            return ['label' => $day->format('D'), 'total' => (int) $salesByDay->get($day->toDateString(), 0)];
+        $period = in_array($request->input('period'), ['day', 'month', 'year'], true) ? $request->input('period') : 'month';
+        $dateValue = (string) $request->input('date', '');
+        $dateIsValid = match ($period) {
+            'day' => preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $dateValue, $parts) && checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1]),
+            'month' => preg_match('/^(\d{4})-(\d{2})$/', $dateValue, $parts) && checkdate((int) $parts[2], 1, (int) $parts[1]),
+            default => preg_match('/^\d{4}$/', $dateValue) && (int) $dateValue >= 1900 && (int) $dateValue <= 9999,
+        };
+        if (! $dateIsValid) {
+            $dateValue = now()->format(['day' => 'Y-m-d', 'month' => 'Y-m', 'year' => 'Y'][$period]);
+        }
+        $start = match ($period) {
+            'day' => Carbon::createFromFormat('!Y-m-d', $dateValue)->startOfDay(),
+            'month' => Carbon::createFromFormat('!Y-m', $dateValue)->startOfMonth(),
+            default => Carbon::createFromFormat('!Y', $dateValue)->startOfYear(),
+        };
+        $end = match ($period) {
+            'day' => $start->copy()->endOfDay(),
+            'month' => $start->copy()->endOfMonth(),
+            default => $start->copy()->endOfYear(),
+        };
+
+        $driver = DB::getDriverName();
+        $bucketExpression = match ([$period, $driver]) {
+            ['day', 'mysql'] => "DATE_FORMAT(created_at, '%Y-%m-%d %H')",
+            ['day', 'sqlite'] => "strftime('%Y-%m-%d %H', created_at)",
+            ['year', 'mysql'] => "DATE_FORMAT(created_at, '%Y-%m')",
+            ['year', 'sqlite'] => "strftime('%Y-%m', created_at)",
+            default => 'DATE(created_at)',
+        };
+        $salesBuckets = Order::whereIn('status', $revenueStatuses)->whereBetween('created_at', [$start, $end])
+            ->selectRaw($bucketExpression.' as bucket, SUM(total) as total')->groupBy('bucket')->pluck('total', 'bucket');
+        $orderBuckets = Order::whereBetween('created_at', [$start, $end])
+            ->selectRaw($bucketExpression.' as bucket, COUNT(*) as total')->groupBy('bucket')->pluck('total', 'bucket');
+        $bucketCount = match ($period) { 'day' => 24, 'month' => $start->daysInMonth, default => 12 };
+        $chart = collect(range(0, $bucketCount - 1))->map(function (int $index) use ($period, $start, $salesBuckets, $orderBuckets) {
+            $point = match ($period) {
+                'day' => $start->copy()->addHours($index),
+                'month' => $start->copy()->addDays($index),
+                default => $start->copy()->addMonths($index),
+            };
+            $key = match ($period) { 'day' => $point->format('Y-m-d H'), 'month' => $point->toDateString(), default => $point->format('Y-m') };
+            $label = match ($period) { 'day' => $point->format('H'), 'month' => $point->format('d'), default => $point->translatedFormat('M') };
+            return ['label' => $label, 'total' => (int) $salesBuckets->get($key, 0), 'orders' => (int) $orderBuckets->get($key, 0)];
         });
+        $sales = (int) $chart->sum('total');
+        $periodOrderCount = (int) $chart->sum('orders');
+        $topProducts = OrderItem::query()->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('orders.status', $revenueStatuses)->whereBetween('orders.created_at', [$start, $end])
+            ->selectRaw('order_items.product_name, SUM(order_items.quantity) as quantity')
+            ->groupBy('order_items.product_name')->orderByDesc('quantity')->limit(5)->get();
+        $insight = $topProducts->isNotEmpty()
+            ? $topProducts->first()->product_name.' menjadi produk terlaris dengan '.$topProducts->first()->quantity.' pasang terjual pada periode ini.'
+            : 'Belum ada penjualan terverifikasi pada periode ini. Bagikan koleksi unggulan untuk mulai menarik pelanggan.';
         return view('bumalo.admin', [
             'orders' => $orders, 'products' => $products,
-            'sales' => Order::whereIn('status', $revenueStatuses)->sum('total'),
+            'sales' => $sales, 'periodSales' => $sales, 'periodOrderCount' => $periodOrderCount,
+            'period' => $period, 'dateValue' => $dateValue, 'chart' => $chart, 'topProducts' => $topProducts, 'insight' => $insight,
             'orderCount' => Order::count(), 'pendingPayments' => Order::where('status', 'payment_review')->count(),
             'customerCount' => User::where('role', 'customer')->count(), 'staffCount' => User::whereIn('role', ['admin', 'owner', 'warehouse'])->count(),
             'productCount' => Product::count(), 'stockUnits' => ProductVariant::sum('stock'),
             'lowStock' => ProductVariant::with('product')->where('stock', '<=', 3)->orderBy('stock')->get(),
-            'statusCounts' => Order::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'), 'chart' => $chart,
+            'statusCounts' => Order::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
         ]);
     }
     public function verifyPayment(Request $request, Order $order)

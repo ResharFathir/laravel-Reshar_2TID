@@ -1,4 +1,4 @@
-@extends('bumalo.layout')
+@extends('bumalo.admin-layout')
 @section('title', 'Kelola akun — Bumalo.id')
 @section('content')
 <section class="section"><div class="section-head"><div><span class="eyebrow">PANEL ADMIN</span><h1 style="font:800 36px Manrope;letter-spacing:-1.5px;margin:12px 0 0">Kelola akun</h1><p class="sub">Buat, ubah peran, atau hapus akun pelanggan dan tim.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="pill dark" href="{{ route('admin.accounts.create',['role'=>'admin']) }}">+ Tambah admin</a><a class="pill line" href="{{ route('admin.accounts.create') }}">Tambah akun</a></div></div>

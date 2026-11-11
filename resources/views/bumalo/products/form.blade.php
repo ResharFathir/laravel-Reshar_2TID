@@ -1,10 +1,10 @@
-@extends('bumalo.layout')
+@extends('bumalo.admin-layout')
 @section('title', ($editing ? 'Ubah produk' : 'Tambah produk').' - Bumalo.id')
 @section('content')
 <section class="section" style="max-width:900px;margin:auto"><a class="small muted" href="{{ route('admin.products.index') }}">← Kembali ke produk</a><h1 style="font:800 36px Manrope;letter-spacing:-1.5px">{{ $editing ? 'Ubah produk' : 'Tambah produk' }}</h1>
 <form method="post" enctype="multipart/form-data" action="{{ $editing ? route('admin.products.update',$product) : route('admin.products.store') }}" class="card">@csrf @if($editing) @method('PUT') @endif
     <div class="form-grid"><div class="full"><label>Nama produk</label><input class="field" name="name" value="{{ old('name',$product->name) }}" required maxlength="180"></div>
-    <div><label>Merek</label><select class="field" name="brand_id" required><option value="">Pilih merek</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected(old('brand_id',$product->brand_id)==$brand->id)>{{ $brand->name }}</option>@endforeach</select></div>
+    <div><label for="product-brand">Merek</label><input class="field" id="product-brand" name="brand_name" value="{{ old('brand_name', $product->brand?->name) }}" placeholder="Contoh: Stride" maxlength="120" required><small class="field-hint">Merek baru akan otomatis tersedia pada filter.</small></div>
     <div><label>Kategori / olahraga</label><select class="field" name="category_id" required><option value="">Pilih kategori</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected(old('category_id',$product->category_id)==$category->id)>{{ $category->name }}</option>@endforeach</select></div>
     <div><label>Harga (Rp)</label><input class="field" type="number" min="1" name="price" value="{{ old('price',$product->price) }}" required></div>
     <div><label>Status katalog</label><label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" name="is_active" value="1" @checked(old('is_active',$product->is_active))> Tampilkan di toko</label></div>
