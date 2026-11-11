@@ -27,15 +27,11 @@ Route::resource('user', UserController::class)->except('show')->names('admin.use
 
    // Toko: /toko
    Route::prefix('toko')->name('toko.')->group(function () {
-       Route::get('/', [ShopController::class, 'index'])->name('home');
-       Route::get('/trending', [ShopController::class, 'trending'])->name('trending');
-       Route::get('/kategori/{gender}', [ShopController::class, 'kategori'])->name('kategori')->whereIn('gender', ['pria', 'wanita', 'anak']);
-       Route::get('/accessories', [ShopController::class, 'accessories'])->name('accessories');
-       Route::get('/cari', [ShopController::class, 'cari'])->name('cari');
+       
    });
 
    // Admin produk toko: /toko-admin (perlu login)
    Route::prefix('toko-admin')->name('toko.admin.')->middleware('auth')->group(function () {
        Route::redirect('/', '/toko-admin/products');
-       Route::resource('products', ProdukTokoController::class)->except('show');
+      
    });

@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('Portofolio_2555301154', function (Blueprint $table): void {
             $table->id();
-            $table->string('judul');
-            $table->text('deskripsi');
-            $table->string('teknologi');
-            $table->string('gambar')->nullable();
-            $table->timestamps();
+$table->string('judul');
+$table->text('deskripsi');
+$table->string('teknologi');
+$table->string('gambar')->nullable();
+$table->timestamps();
         });
     }
 

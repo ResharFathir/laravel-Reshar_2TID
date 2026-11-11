@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-@extends('layouts.admin.app')
+
+@extends('layouts.app')
 
 @section('content')
          <!-- start main content -->
@@ -29,7 +29,7 @@
         </div>
 
         <!-- end main content -->
-=======
+
 @extends('layouts.app')
 @section('content')
     @section('title', 'Pelanggan')
@@ -130,4 +130,4 @@
     </div>
     {{-- End Main Content --}}
 @endsection
->>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
+

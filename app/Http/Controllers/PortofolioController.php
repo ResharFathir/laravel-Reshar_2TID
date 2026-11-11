@@ -3,35 +3,49 @@
 namespace App\Http\Controllers;
 
 use App\Models\Portofolio;
+use App\Models\Profile;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PortofolioController extends Controller
 {
     // READ: tampilkan semua data
-    public function index()
+    public function index(): View
     {
-        $portofolio = Portofolio::latest()->paginate(10);
-        return view('portofolio.index', compact('portofolio'));
+        $portofolios = Portofolio::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $profile = Profile::first();
+
+        $technologies = $portofolios
+            ->flatMap(fn (Portofolio $item) => array_map('trim', explode(',', (string) $item->teknologi)))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('portfolio.index', compact('portofolios', 'profile', 'technologies'));
     }
 
     // CREATE: tampilkan form tambah
-    public function create()
+    public function create(): View
     {
-        return view('portofolio.create');
+        return view('portfolio.create', ['profile' => Profile::first()]);
     }
 
     // CREATE: simpan data baru
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'judul'       => 'required|string|max:255',
-            'deskripsi'   => 'required|string',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'link_demo'   => 'nullable|url',
-            'link_github' => 'nullable|url',
-            'teknologi'   => 'nullable|string|max:255',
-            'tanggal'     => 'nullable|date',
+            'judul'     => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'teknologi' => 'required|string|max:255',
+            'link'      => 'nullable|url:http,https|max:2048',
+            'gambar'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if ($request->hasFile('gambar')) {
@@ -45,29 +59,36 @@ class PortofolioController extends Controller
     }
 
     // READ: detail satu data
-    public function show(Portofolio $portofolio)
+    public function show(Portofolio $portofolio): View
     {
-        return view('portofolio.show', compact('portofolio'));
+        return view('portfolio.show', [
+            'portofolio' => $portofolio,
+            'profile'    => Profile::first(),
+        ]);
     }
 
     // UPDATE: tampilkan form edit
-    public function edit(Portofolio $portofolio)
+    public function edit(Portofolio $portofolio): View
     {
-        return view('portofolio.edit', compact('portofolio'));
+        return view('portfolio.edit', [
+            'portofolio' => $portofolio,
+            'profile'    => Profile::first(),
+        ]);
     }
 
     // UPDATE: simpan perubahan
-    public function update(Request $request, Portofolio $portofolio)
+    public function update(Request $request, Portofolio $portofolio): RedirectResponse
     {
         $data = $request->validate([
-            'judul'       => 'required|string|max:255',
-            'deskripsi'   => 'required|string',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'link_demo'   => 'nullable|url',
-            'link_github' => 'nullable|url',
-            'teknologi'   => 'nullable|string|max:255',
-            'tanggal'     => 'nullable|date',
+            'judul'        => 'required|string|max:255',
+            'deskripsi'    => 'required|string',
+            'teknologi'    => 'required|string|max:255',
+            'link'         => 'nullable|url:http,https|max:2048',
+            'gambar'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'hapus_gambar' => 'nullable|boolean',
         ]);
+
+        unset($data['hapus_gambar']);
 
         if ($request->hasFile('gambar')) {
             // hapus gambar lama agar storage tidak menumpuk
@@ -75,6 +96,11 @@ class PortofolioController extends Controller
                 Storage::disk('public')->delete($portofolio->gambar);
             }
             $data['gambar'] = $request->file('gambar')->store('portofolio', 'public');
+        } elseif ($request->boolean('hapus_gambar')) {
+            if ($portofolio->gambar) {
+                Storage::disk('public')->delete($portofolio->gambar);
+            }
+            $data['gambar'] = null;
         }
 
         $portofolio->update($data);
@@ -84,7 +110,7 @@ class PortofolioController extends Controller
     }
 
     // DELETE: hapus data
-    public function destroy(Portofolio $portofolio)
+    public function destroy(Portofolio $portofolio): RedirectResponse
     {
         if ($portofolio->gambar) {
             Storage::disk('public')->delete($portofolio->gambar);

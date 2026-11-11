@@ -1,6 +1,6 @@
-<<<<<<< HEAD
+
        <!-- start main -->
-        @extends('layouts.admin.app')
+        @extends('layouts.app')
         @section(content)
        <div class="py-4">
             <nav aria-label="breadcrumb" class="d-none d-md-inline-block">
@@ -203,4 +203,4 @@
     </div>
     {{-- End Main Content --}}
 @endsection
->>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
+

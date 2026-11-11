@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 <!--
 
 =========================================================
@@ -1004,7 +1004,7 @@
 =======
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'Dashboard')	
 
 @section('content')
     <section class="dashboard-welcome py-4">
@@ -1056,5 +1056,4 @@
         .dashboard-tip p { margin-top:4px; color:#738096; font-size:.82rem; }
         @media(max-width:575.98px) { .dashboard-card { min-height:120px; padding:18px; } }
     </style>
-@endsection
->>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
+
