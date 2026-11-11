@@ -220,4 +220,8 @@
             <div class="h-14.5 hidden lg:block"></div>
         @endif
     </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7

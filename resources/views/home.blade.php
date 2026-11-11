@@ -57,7 +57,12 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="#">My Laravel App</a>
+<<<<<<< HEAD
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+=======
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -96,7 +101,13 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">About Our Application</h5>
+<<<<<<< HEAD
                         <p class="card-text">Our application provides a clean and intuitive interface, allowing users to navigate easily and perform tasks efficiently. Built with Laravel and Bootstrap, it offers flexibility and responsiveness.</p>
+=======
+                        <p class="card-text">Our application provides a clean and intuitive interface, allowing users to
+                            navigate easily and perform tasks efficiently. Built with Laravel and Bootstrap, it offers
+                            flexibility and responsiveness.</p>
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
                         <a href="#" class="btn btn-primary">Explore More</a>
                     </div>
                 </div>
@@ -105,11 +116,21 @@
                 <div class="accordion" id="accordionExample">
                     <div class="accordion-item">
                         <h2 class="accordion-header">
+<<<<<<< HEAD
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
                                 About Us
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+=======
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne">
+                                About Us
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show"
+                            data-bs-parent="#accordionExample">
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
                             <div class="accordion-body">
                                 We are a tech company that specializes in web development solutions.
                             </div>
@@ -117,7 +138,12 @@
                     </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header">
+<<<<<<< HEAD
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+=======
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseTwo">
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
                                 Our Services
                             </button>
                         </h2>
@@ -154,6 +180,34 @@
             </div>
 
             <div class="col-md-6">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Form Pertanyaan</h5>
+
+                        <form action="{{ route('question.store') }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="nama" class="form-label">Nama</label>
+                                <input type="text" class="form-control" id="nama" name="nama" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="text" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label for="pertanyaan" class="form-label">Pertanyaan</label>
+                                <textarea class="form-control" rows="4"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Kirim Pertanyaan</button>
+                        </form>
+                    </div>
+                </div>
+=======
+>>>>>>> 4fcad0c7c5385a9a558539f8c8e3b30353d8dce7
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
                 {{-- Alerts --}}
                 <div class="card ">
                     <div class="card-body">
@@ -215,7 +269,17 @@
                                 </tbody>
                             </table>
                         </div>
+<<<<<<< HEAD
                         <p class="text-muted small mb-0">Tambahkan <code>.table-striped</code> atau <code>.table-bordered</code> sesuai kebutuhan.</p>
+=======
+                        <p class="text-muted small mb-0">Tambahkan <code>.table-striped</code> atau
+<<<<<<< HEAD
+                            <code>.table-bordered</code> sesuai kebutuhan.
+                        </p>
+=======
+                            <code>.table-bordered</code> sesuai kebutuhan.</p>
+>>>>>>> 4fcad0c7c5385a9a558539f8c8e3b30353d8dce7
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
                     </div>
                 </div>
             </div>
@@ -225,7 +289,11 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
+<<<<<<< HEAD
             <p>&copy; {{date('Y')}} My Laravel App. All Rights Reserved.</p>
+=======
+            <p>&copy; {{ date('Y') }} My Laravel App. All Rights Reserved.</p>
+>>>>>>> d53abf93a89ef8261a84f4a912e3af3d44be0ad7
         </div>
     </footer>
 
