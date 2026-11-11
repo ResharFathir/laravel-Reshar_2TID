@@ -1,0 +1,8 @@
+@extends('bumalo.layout')
+@section('title', 'Kelola akun — Bumalo.id')
+@section('content')
+<section class="section"><div class="section-head"><div><span class="eyebrow">PANEL ADMIN</span><h1 style="font:800 36px Manrope;letter-spacing:-1.5px;margin:12px 0 0">Kelola akun</h1><p class="sub">Buat, ubah peran, atau hapus akun pelanggan dan tim.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="pill dark" href="{{ route('admin.accounts.create',['role'=>'admin']) }}">+ Tambah admin</a><a class="pill line" href="{{ route('admin.accounts.create') }}">Tambah akun</a></div></div>
+<div class="card" style="overflow:auto"><table class="table"><thead><tr><th>Nama</th><th>Email</th><th>Telepon</th><th>Peran</th><th>Aksi</th></tr></thead><tbody>
+@forelse($accounts as $account)<tr><td>{{ $account->name }} @if($account->is(auth()->user()))<span class="muted small">(Anda)</span>@endif</td><td>{{ $account->email }}</td><td>{{ $account->phone ?: '—' }}</td><td><span class="status">{{ ucfirst($account->role) }}</span></td><td><div style="display:flex;gap:8px;align-items:center"><a class="pill line" style="padding:8px 12px" href="{{ route('admin.accounts.edit', $account) }}">Ubah</a>@unless($account->is(auth()->user()))<form method="post" action="{{ route('admin.accounts.destroy', $account) }}" onsubmit="return confirm('Hapus akun ini?')">@csrf @method('DELETE')<button class="pill line" style="padding:8px 12px;color:#a33">Hapus</button></form>@endunless</div></td></tr>@empty<tr><td colspan="5">Belum ada akun.</td></tr>@endforelse
+</tbody></table></div><div style="margin-top:18px">{{ $accounts->links() }}</div></section>
+@endsection
