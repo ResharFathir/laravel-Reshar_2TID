@@ -1,0 +1,1 @@
+<svg viewBox="0 0 120 70" aria-hidden="true"><rect x="28" y="8" width="64" height="54" rx="10" fill="{{ $c }}"/><path d="M44 8v10a16 16 0 0 0 32 0V8" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="3"/></svg>

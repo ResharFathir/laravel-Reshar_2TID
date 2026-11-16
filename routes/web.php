@@ -11,6 +11,7 @@ use App\Http\Controllers\QuestionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PortofolioController;
 
+
 Route::get('/', [PortofolioController::class, 'index']);
 Route::resource('portofolio', PortofolioController::class);
 
@@ -35,7 +36,6 @@ Route::resource('user', UserController::class)->except('show')->names('admin.use
    });
 
    // Admin produk toko: /toko-admin (perlu login)
-   Route::prefix('toko-admin')->name('toko.admin.')->middleware('auth')->group(function () {
-       Route::redirect('/', '/toko-admin/products');
+Route::prefix('toko-admin')->name('toko.admin.')->group(function () {       Route::redirect('/', '/toko-admin/products');
        Route::resource('products', ProdukTokoController::class)->except('show');
    });
