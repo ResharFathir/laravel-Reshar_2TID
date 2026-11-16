@@ -112,7 +112,7 @@
                 @if($profile?->photo_path)
                     <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($profile->photo_path) }}" alt="Foto {{ $displayName }}">
                 @else
-                    <div class="portrait-initials" aria-label="Foto profil belum ditambahkan">RFZ</div>
+                    <div class="portrait-initials" aria-label="Foto profil belum ditambahkan">Reshar</div>
                 @endif
                 <span class="portrait-chip">{{ $profile?->address ?: 'Indonesia' }}</span>
             </div>
