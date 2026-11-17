@@ -3,6 +3,12 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin · Bumalo')</title>
+    <script>
+        (() => {
+            const theme = localStorage.getItem('bumalo-admin-theme') || 'dark';
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/shop-theme.css') }}">
@@ -12,15 +18,17 @@
         @media(max-width:900px){.admin-sidebar{width:220px}.admin-main{margin-left:220px}.admin-content{padding:18px 22px 38px}.admin-topbar{padding:0 22px}.admin-flash{width:calc(100% - 44px)}}
         @media(max-width:700px){.admin-sidebar{position:static;width:auto;height:auto;padding:12px;display:block}.admin-brand{padding:4px 8px 12px}.admin-caption,.admin-sidebar-bottom{display:none}.admin-menu{display:flex;overflow-x:auto;gap:5px}.admin-menu a{white-space:nowrap;padding:10px}.admin-main{margin:0}.admin-topbar{height:58px;padding:0 16px}.admin-toggle{display:block}.admin-content{padding:14px}.admin-flash{width:calc(100% - 28px)}.admin-content .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-content .columns{grid-template-columns:1fr!important}}
         @media(max-width:420px){.admin-content .metrics{grid-template-columns:1fr}.admin-content .admin-title{align-items:flex-start;flex-direction:column;gap:12px}}
-    </style><link rel="stylesheet" href="{{ asset('css/admin-ai.css') }}">
+    </style><link rel="stylesheet" href="{{ asset('css/admin-ai.css') }}"><link rel="stylesheet" href="{{ asset('css/admin-theme.css') }}">
 </head>
 <body>
 <div class="admin-shell">
-    <aside class="admin-sidebar">
-        <a class="admin-brand" href="{{ route('admin.dashboard') }}">bumalo<span>.</span></a>
+    <button class="sidebar-backdrop" type="button" data-sidebar-backdrop aria-label="Tutup menu"></button>
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <div class="sidebar-heading"><a class="admin-brand" href="{{ route('admin.dashboard') }}">bumalo<span>.</span></a><button type="button" class="sidebar-close" data-sidebar-close aria-label="Tutup sidebar">×</button></div>
         <div class="admin-caption">MENU TOKO</div>
         <nav class="admin-menu">
             <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon">⌂</span>Ringkasan</a>
+            <a class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}"><span class="nav-icon">✓</span>Verifikasi pesanan</a>
             @if(in_array(auth()->user()->role,['admin','owner']))
                 <a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}"><span class="nav-icon">▦</span>Produk & stok</a>
                 <a class="{{ request()->routeIs('admin.accounts.*') ? 'active' : '' }}" href="{{ route('admin.accounts.index') }}"><span class="nav-icon">♙</span>Kelola akun</a>
@@ -29,11 +37,48 @@
         <div class="admin-sidebar-bottom"><nav class="admin-menu"><a href="{{ route('shop.index') }}"><span class="nav-icon">↗</span>Lihat toko</a><form method="post" action="{{ route('logout') }}">@csrf<button type="submit" class="admin-link-button"><span class="nav-icon">⇥</span>Keluar</button></form></nav></div>
     </aside>
     <div class="admin-main">
-        <header class="admin-topbar"><button class="admin-toggle" onclick="document.querySelector('.admin-sidebar').scrollIntoView({behavior:'smooth'})">Menu</button><small>Panel pengelolaan toko</small><div class="admin-topbar-actions"><span class="admin-user">{{ auth()->user()->name }} · {{ ucfirst(auth()->user()->role) }}</span><form method="post" action="{{ route('logout') }}">@csrf<button class="topbar-logout" type="submit">Keluar</button></form></div></header>
+        <header class="admin-topbar"><button class="admin-toggle" type="button" data-sidebar-toggle aria-expanded="false" aria-controls="admin-sidebar"><span aria-hidden="true">☰</span><span>Menu</span></button><small>Panel pengelolaan toko</small><div class="admin-topbar-actions"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Ganti tema">☀ <span>Mode terang</span></button><span class="admin-user">{{ auth()->user()->name }} · {{ ucfirst(auth()->user()->role) }}</span><form method="post" action="{{ route('logout') }}">@csrf<button class="topbar-logout" type="submit">Keluar</button></form></div></header>
         @if(session('success'))<div class="notice admin-flash">{{ session('success') }}</div>@endif
         @if($errors->any())<div class="notice error admin-flash">{{ $errors->first() }}</div>@endif
         <main class="admin-content">@yield('content')</main>
     </div>
 </div>
 @stack('scripts')
+<script>
+    (() => {
+        const button = document.querySelector('[data-theme-toggle]');
+        const root = document.documentElement;
+        const updateButton = () => {
+            const dark = root.dataset.theme === 'dark';
+            button.innerHTML = dark ? '☀ <span>Mode terang</span>' : '☾ <span>Mode gelap</span>';
+            button.setAttribute('aria-label', dark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap');
+        };
+        updateButton();
+        button.addEventListener('click', () => {
+            root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('bumalo-admin-theme', root.dataset.theme);
+            updateButton();
+        });
+    })();
+</script>
+<script>
+    (() => {
+        const toggle = document.querySelector('[data-sidebar-toggle]');
+        const backdrop = document.querySelector('[data-sidebar-backdrop]');
+        const close = document.querySelector('[data-sidebar-close]');
+        const sidebar = document.querySelector('.admin-sidebar');
+        const setOpen = (open) => {
+            document.body.classList.toggle('sidebar-open', open);
+            backdrop.classList.toggle('is-visible', open);
+            toggle.setAttribute('aria-expanded', String(open));
+        };
+        toggle.addEventListener('click', () => setOpen(!document.body.classList.contains('sidebar-open')));
+        backdrop.addEventListener('click', () => setOpen(false));
+        close.addEventListener('click', () => setOpen(false));
+        sidebar.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setOpen(false);
+        });
+    })();
+</script>
 </body></html>

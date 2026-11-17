@@ -5,4 +5,5 @@ class ProductVariant extends Model
 {
     protected $guarded = [];
     public function product() { return $this->belongsTo(Product::class); }
+    public function orderItems() { return $this->hasMany(OrderItem::class, 'variant_id'); }
 }

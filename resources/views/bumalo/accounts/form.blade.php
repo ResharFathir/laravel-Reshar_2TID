@@ -1,5 +1,5 @@
 @extends('bumalo.admin-layout')
-@section('title', ($editing ? 'Ubah akun' : 'Tambah akun').' - Bumalo AI Console')
+@section('title', ($editing ? 'Ubah akun' : 'Tambah akun').' - Bumalo')
 @section('content')
 <section class="section">
     <div class="admin-form-page-heading"><a class="admin-back-link" href="{{ route('admin.accounts.index') }}">&larr; Kembali ke daftar akun</a><span class="ai-kicker ai-kicker-dark">IDENTITY MANAGEMENT</span><h1>{{ $editing ? 'Ubah akun' : 'Tambah akun' }}</h1><p>Kelola identitas dan hak akses pengguna toko dengan aman.</p></div>

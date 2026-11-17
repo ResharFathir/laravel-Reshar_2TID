@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // A newer store migration may already have created the products table.
+        // In that case, keep its schema and allow this pending migration to complete.
+        if (Schema::hasTable('products')) {
+            return;
+        }
+
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -28,6 +34,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        // Only remove the legacy catalog table created by this migration.
+        if (Schema::hasTable('products') && Schema::hasColumn('products', 'type')) {
+            Schema::drop('products');
+        }
     }
 };

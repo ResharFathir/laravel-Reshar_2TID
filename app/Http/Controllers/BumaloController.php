@@ -28,13 +28,13 @@ class BumaloController extends Controller
                 };
             }, fn ($q) => $q->latest())
             ->get();
-        return view('bumalo.home', ['products' => $products, 'categories' => Category::orderBy('name')->get(), 'brands' => Brand::whereHas('products', fn ($query) => $query->where('is_active', true))->orderBy('name')->get(), 'cartCount' => array_sum(session('cart', []))]);
+        return view('bumalo.catalog', ['products' => $products, 'categories' => Category::orderBy('name')->get(), 'brands' => Brand::whereHas('products', fn ($query) => $query->where('is_active', true))->orderBy('name')->get()]);
     }
 
     public function product(string $slug)
     {
         $product = Product::with(['brand', 'category', 'variants'])->where('slug', $slug)->where('is_active', true)->firstOrFail();
-        return view('bumalo.product', compact('product'));
+        return view('bumalo.product', ['product' => $product, 'cart' => session('cart', [])]);
     }
 
     public function sizeGuide() { return view('bumalo.info', ['title' => 'Panduan ukuran', 'kind' => 'sizes']); }
@@ -119,7 +119,14 @@ class BumaloController extends Controller
         return back()->with('success', 'Bukti pembayaran diterima dan menunggu verifikasi admin.');
     }
 
-    public function login() { return view('bumalo.login'); }
+    public function login()
+    {
+        if (auth()->check()) {
+            return redirect()->route(in_array(auth()->user()->role, ['admin', 'owner', 'warehouse'], true) ? 'admin.dashboard' : 'shop.index');
+        }
+
+        return view('bumalo.login');
+    }
     public function register()
     {
         if (auth()->check()) return redirect()->route(auth()->user()->role === 'customer' ? 'shop.index' : 'admin.dashboard');
@@ -139,6 +146,10 @@ class BumaloController extends Controller
     }
     public function adminSetup()
     {
+        if (auth()->check()) {
+            return redirect()->route(in_array(auth()->user()->role, ['admin', 'owner', 'warehouse'], true) ? 'admin.dashboard' : 'shop.index');
+        }
+
         if (User::whereIn('role', ['admin', 'owner'])->exists()) return redirect()->route('login')->with('success', 'Admin sudah terdaftar. Silakan masuk.');
         return view('bumalo.admin-setup');
     }
@@ -237,6 +248,25 @@ class BumaloController extends Controller
             'statusCounts' => Order::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
         ]);
     }
+
+    public function orders(Request $request)
+    {
+        $orders = Order::with(['items', 'payment', 'shipment'])
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
+            ->latest()->paginate(15)->withQueryString();
+
+        return view('bumalo.admin.orders.index', [
+            'orders' => $orders,
+            'pendingPayments' => Order::where('status', 'payment_review')->count(),
+            'toShip' => Order::where('status', 'processing')->count(),
+            'statuses' => [
+                'pending_payment' => 'Menunggu pembayaran', 'payment_review' => 'Perlu verifikasi',
+                'processing' => 'Siap dikirim', 'shipped' => 'Dalam pengiriman',
+                'completed' => 'Selesai', 'cancelled' => 'Dibatalkan',
+            ],
+        ]);
+    }
+
     public function verifyPayment(Request $request, Order $order)
     {
         abort_unless(auth()->user()->role === 'admin' || auth()->user()->role === 'owner', 403);

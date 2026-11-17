@@ -1,10 +1,10 @@
 @extends('bumalo.admin-layout')
-@section('title', 'AI Commerce Dashboard · Bumalo')
+@section('title', 'Dashboard toko · Bumalo')
 @section('content')
 <section class="section ai-dashboard">
     <header class="dashboard-hero">
         <div class="dashboard-hero-copy">
-            <span class="ai-kicker"><span class="ai-spark">✦</span> BUMALO AI COMMERCE INTELLIGENCE</span>
+            <span class="ai-kicker"><span class="ai-spark">✦</span> DASHBOARD TOKO BUMALO</span>
             <h1>Selamat datang, {{ auth()->user()->name }}.</h1>
             <p>Pantau performa toko dan temukan peluang berikutnya dari satu ruang kerja.</p>
         </div>
@@ -38,7 +38,7 @@
     </div>
 
     <div class="insight-grid">
-        <article class="insight-card"><div class="insight-orb">✦</div><div><span class="ai-kicker ai-kicker-dark">SMART STORE INSIGHT</span><h3>Fokus peluangmu berikutnya</h3><p>{{ $insight }}</p></div></article>
+        <article class="insight-card"><div class="insight-orb">✦</div><div><span class="ai-kicker ai-kicker-dark">INSIGHT TOKO</span><h3>Fokus peluangmu berikutnya</h3><p>{{ $insight }}</p></div></article>
         <article class="mini-stat-card"><span>Pesanan periode ini</span><strong>{{ number_format($periodOrderCount) }}</strong><small>{{ number_format($chart->sum('orders')) }} aktivitas tercatat pada grafik</small></article>
     </div>
 
@@ -46,7 +46,7 @@
         <section class="dashboard-panel"><div class="panel-heading"><div><span class="ai-kicker ai-kicker-dark">PERFORMA PRODUK</span><h2>Produk terlaris</h2></div><span class="panel-badge">{{ ['day'=>'HARI INI','month'=>'BULAN INI','year'=>'TAHUN INI'][$period] }}</span></div>
             @forelse($topProducts as $index => $item)<div class="top-product-row"><span class="product-rank">{{ str_pad($index+1,2,'0',STR_PAD_LEFT) }}</span><div class="top-product-copy"><strong>{{ $item->product_name }}</strong><small>Terjual {{ number_format($item->quantity) }} pasang</small></div><div class="rank-meter"><span style="width:{{ max(12, (int)($item->quantity / max(1,$topProducts->max('quantity')) * 100)) }}%"></span></div></div>@empty<div class="panel-empty">Belum ada penjualan terverifikasi pada periode ini.</div>@endforelse
         </section>
-        <section class="dashboard-panel"><div class="panel-heading"><div><span class="ai-kicker ai-kicker-dark">ORDER HEALTH</span><h2>Status pesanan</h2></div><span class="panel-badge">SEMUA WAKTU</span></div>
+        <section class="dashboard-panel"><div class="panel-heading"><div><span class="ai-kicker ai-kicker-dark">RINGKASAN PESANAN</span><h2>Status pesanan</h2></div><span class="panel-badge">SEMUA WAKTU</span></div>
             @php($statusLabels=['pending_payment'=>'Menunggu bayar','payment_review'=>'Verifikasi bayar','processing'=>'Dikemas','shipped'=>'Dikirim','completed'=>'Selesai','cancelled'=>'Dibatalkan'])
             @foreach($statusLabels as $key=>$label)<div class="status-line"><span><i class="status-dot status-{{ $key }}"></i>{{ $label }}</span><strong>{{ number_format($statusCounts->get($key,0)) }}</strong></div>@endforeach
         </section>
@@ -61,7 +61,7 @@
                 @if($order->status==='processing')<form method="post" action="{{ route('admin.orders.ship',$order) }}" class="ai-order-actions">@csrf<input class="field" name="courier" placeholder="Kurir" required><input class="field" name="tracking_number" placeholder="Nomor resi" required><button class="ai-button ai-button-primary">Simpan resi</button></form>@endif
             </article>@empty<div class="panel-empty">Belum ada pesanan.</div>@endforelse
         </section>
-        <aside class="dashboard-panel stock-panel"><div class="panel-heading"><div><span class="ai-kicker ai-kicker-dark">INVENTORY RADAR</span><h2>Stok menipis</h2><p>Ambang batas 3 pasang.</p></div><span class="stock-count">{{ $lowStock->count() }}</span></div>
+        <aside class="dashboard-panel stock-panel"><div class="panel-heading"><div><span class="ai-kicker ai-kicker-dark">PEMANTAUAN STOK</span><h2>Stok menipis</h2><p>Ambang batas 3 pasang.</p></div><span class="stock-count">{{ $lowStock->count() }}</span></div>
             @forelse($lowStock as $variant)<div class="low-stock-row"><div><strong>{{ $variant->product->name }}</strong><small>Ukuran EU {{ $variant->size }}</small></div><span>{{ $variant->stock }} <small>pasang</small></span></div>@empty<div class="panel-empty">Semua stok masih aman.</div>@endforelse
             @if(in_array(auth()->user()->role,['admin','owner']))<a class="inventory-link" href="{{ route('admin.products.index',['stok'=>'tersedia']) }}">Kelola inventaris <span>→</span></a>@endif
         </aside>
