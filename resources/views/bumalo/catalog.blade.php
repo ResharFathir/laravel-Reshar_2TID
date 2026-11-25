@@ -1,6 +1,7 @@
 @extends('bumalo.layout')
 @section('title', 'Bumalo.id — Sepatu pilihan')
 @section('content')
+@include('bumalo.partials.home-sections')
 <section class="hero" style="margin-top:34px">
     <div><span class="eyebrow">LANGKAH BARU DIMULAI DI SINI</span><h1 style="font:800 clamp(42px,7vw,76px) Manrope;letter-spacing:-4px;line-height:1.04;margin:20px 0">Temukan sepatu untuk setiap langkah.</h1><p class="muted" style="font-size:17px;line-height:1.8">Koleksi sepatu olahraga pilihan untuk berlari, bermain, dan bergerak setiap hari.</p><a class="pill dark" href="#koleksi">Jelajahi koleksi ↓</a></div>
     <div class="hero-img product-art" style="display:grid;place-items:center;font-size:120px">👟</div>
@@ -14,7 +15,7 @@
         <button class="pill dark">Cari</button>
     </form>
     @if($products->isEmpty())<div class="card"><h3>Produk belum tersedia</h3><p class="muted">Coba ubah kata kunci atau pilihan kategori.</p></div>@else
-    <div class="grid">@foreach($products as $product)<a class="card" href="{{ route('shop.product', $product->slug) }}" style="text-decoration:none;color:inherit;padding:0;overflow:hidden"><div class="product-art" style="height:220px;display:grid;place-items:center;font-size:76px">@if($product->image)<img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}" style="width:100%;height:100%;object-fit:cover">@else👟@endif</div><div style="padding:17px"><span class="eyebrow">{{ $product->brand->name }} · {{ $product->category->name }}</span><h3 style="margin:8px 0">{{ $product->name }}</h3><p class="muted small">{{ Str::limit($product->description, 75) }}</p><strong>Rp{{ number_format($product->price, 0, ',', '.') }}</strong><p class="small muted" style="margin-bottom:0">{{ $product->variants->sum('stock') }} pasang tersedia</p></div></a>@endforeach</div>
+    <div class="grid">@foreach($products as $product)<a class="card" href="{{ route('shop.product', $product->slug) }}" style="text-decoration:none;color:inherit;padding:0;overflow:hidden"><div class="product-art" style="height:220px;display:grid;place-items:center;font-size:76px">@if($product->image)<img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}" style="width:100%;height:100%;object-fit:cover">@else👟@endif</div><div style="padding:17px"><span class="eyebrow">{{ $product->getRelationValue('brand')?->name  }} · {{ $product->category->name }}</span><h3 style="margin:8px 0">{{ $product->name }}</h3><p class="muted small">{{ Str::limit($product->description, 75) }}</p><strong>Rp{{ number_format($product->price, 0, ',', '.') }}</strong><p class="small muted" style="margin-bottom:0">{{ $product->variants->sum('stock') }} pasang tersedia</p></div></a>@endforeach</div>
     @endif
 </section>
 @endsection

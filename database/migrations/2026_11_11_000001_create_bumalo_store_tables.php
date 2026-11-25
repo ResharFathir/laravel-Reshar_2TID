@@ -5,20 +5,34 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
+    private function make(string $name, Closure $callback): void
+    {
+        if (! Schema::hasTable($name)) {
+            Schema::create($name, $callback);
+        }
+    }
+
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('phone')->nullable();
-            $table->string('role')->default('customer')->index();
-        });
+        
+       if (! Schema::hasColumn('users', 'phone')) {
+    Schema::table('users', function (Blueprint $table) {
+        $table->string('phone')->nullable();
+    });
+}
 
-        Schema::create('brands', function (Blueprint $table) {
+if (! Schema::hasColumn('users', 'role')) {
+    Schema::table('users', function (Blueprint $table) {
+        $table->string('role')->default('customer')->index();
+    });
+}
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->string('name')->unique(); $table->timestamps();
         });
-        Schema::create('categories', function (Blueprint $table) {
+       $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->string('name')->unique(); $table->timestamps();
         });
-        Schema::create('products', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id();
             $table->foreignId('brand_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
@@ -27,12 +41,12 @@ return new class extends Migration {
             $table->string('image')->nullable(); $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
         });
-        Schema::create('product_variants', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('size', 8); $table->string('sku')->unique(); $table->unsignedInteger('stock')->default(0);
             $table->timestamps(); $table->unique(['product_id', 'size']);
         });
-        Schema::create('orders', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->string('code', 24)->unique();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('customer_name'); $table->string('email')->nullable(); $table->string('phone');
@@ -42,30 +56,30 @@ return new class extends Migration {
             $table->timestamp('payment_due_at')->nullable(); $table->text('admin_note')->nullable();
             $table->timestamps();
         });
-        Schema::create('order_items', function (Blueprint $table) {
+       $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('variant_id')->nullable()->constrained('product_variants')->nullOnDelete();
             $table->string('product_name'); $table->string('size', 8); $table->unsignedInteger('price');
             $table->unsignedInteger('quantity'); $table->timestamps();
         });
-        Schema::create('payments', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->string('proof_path')->nullable(); $table->unsignedInteger('amount');
             $table->string('status')->default('unsubmitted')->index();
             $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('note')->nullable(); $table->timestamp('verified_at')->nullable(); $table->timestamps();
         });
-        Schema::create('shipments', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->foreignId('order_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('courier')->nullable(); $table->string('tracking_number')->nullable();
             $table->timestamp('shipped_at')->nullable(); $table->timestamps();
         });
-        Schema::create('stock_movements', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->foreignId('variant_id')->constrained('product_variants')->cascadeOnDelete();
             $table->integer('change'); $table->string('reason');
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); $table->timestamps();
         });
-        Schema::create('order_status_logs', function (Blueprint $table) {
+        $this->make('brands', function (Blueprint $table) {
             $table->id(); $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->string('status'); $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->text('note')->nullable(); $table->timestamps();

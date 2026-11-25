@@ -8,7 +8,7 @@
 <div class="columns">
     <div class="product-art" style="height:480px;border-radius:24px">@if($product->image)<img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}" style="width:100%;height:100%;object-fit:cover;border-radius:24px">@else<span class="shoe" style="font-size:170px">&#128095;</span>@endif</div>
     <div>
-        <span class="eyebrow">{{ $product->brand->name }} · {{ $product->category->name }}</span>
+        <span class="eyebrow">{{ $product->getRelationValue('brand')?->name }} · {{ $product->category->name }}</span>
         <h1 style="font:800 clamp(32px,4vw,48px) Manrope;letter-spacing:-2px;margin:18px 0">{{ $product->name }}</h1>
         <div class="price" style="font-size:24px">Rp{{ number_format($product->price, 0, ',', '.') }}</div>
         <p class="muted" style="line-height:1.8">{{ $product->description }}</p>
